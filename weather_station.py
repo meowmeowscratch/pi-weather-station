@@ -41,9 +41,12 @@ import adafruit_dht
 
 # Meow — The main class from the meow-sdk library. It handles sending your
 #         sensor data to the meow meow scratch API over the internet.
-# MeowError — A specific error type that gets raised when something goes wrong
-#              with the API request (like a network problem or invalid key).
-from meow_sdk import Meow, MeowError
+# MeowError — The general "something went wrong with the API" error. The two
+#              below are more specific versions of it, so we can give you a
+#              more helpful message about what to actually do:
+# AuthError — your API key was rejected (wrong, expired, or not set).
+# RateLimitError — you're sending data faster than your plan allows.
+from meow_sdk import Meow, MeowError, AuthError, RateLimitError
 
 # --- Configuration ---
 
@@ -108,10 +111,28 @@ def main():
             try:
                 api.send(APP, ENDPOINT, reading)
                 print(f"Sent: {reading['temperature']}°C, {reading['humidity']}%")
+            except AuthError as e:
+                # A rejected key will never fix itself, so there's no point
+                # looping forever printing the same error. Stop and tell the
+                # user exactly what to check.
+                print(f"API key rejected: {e}")
+                if e.hint:
+                    print(f"Hint: {e.hint}")
+                sys.exit(1)
+            except RateLimitError as e:
+                # You're sending faster than your plan allows. Waiting a full
+                # minute is almost always enough to be allowed back in.
+                print(f"Rate limited: {e}")
+                time.sleep(60)
             except MeowError as e:
-                # If the API request fails (network issue, server error, etc.),
-                # print the error but keep the loop running.
+                # Any other API problem (network dropped, server hiccup).
+                # Print it but keep the loop running -- the next reading in
+                # INTERVAL seconds will probably succeed.
                 print(f"Send failed: {e}")
+                # .hint is a plain-English suggestion the API sends back when
+                # it knows how to fix the problem. It isn't always present.
+                if e.hint:
+                    print(f"Hint: {e.hint}")
         else:
             print("Sensor read failed, retrying next cycle")
 

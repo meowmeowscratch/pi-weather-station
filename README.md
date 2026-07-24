@@ -108,6 +108,8 @@ Replace `your-key-here` with your actual API key from your meow meow scratch acc
 
 > **Note:** This environment variable only lasts for your current terminal session. If you close the terminal and open a new one, you'll need to run the `export` command again. To make it permanent, you can add the line to your `~/.bashrc` file.
 
+> **Which kind of key should you use?** Your account offers two. A **platform token** works across every app you own. An **app API key** works for one app only. For a Pi that sits running for days, use an **app API key** — if it ever leaks, only this one app is affected, not your whole account. You'll find both in your account settings.
+
 ### Step 4: Set up your API endpoint
 
 Before you can send data, you need to create a place to store it on meow meow scratch. See the [API setup](#api-setup) section below.
